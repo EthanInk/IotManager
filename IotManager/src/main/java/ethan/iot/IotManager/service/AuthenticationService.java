@@ -102,7 +102,7 @@ public class AuthenticationService {
 
     public void authenticateMqttServerRequest(MqttAuthRequest mqttAuthRequest) {
         if (mqttAuthRequest.getUsername().contains("FE_JWT_")) {
-            Optional<LoginDetails> user = loginRepository.findById(mqttAuthRequest.getClientid());
+            Optional<LoginDetails> user = loginRepository.findById(extractFEJWTUsername(mqttAuthRequest.getUsername()));
             if (user.isEmpty()) throw new EntityNotFoundException("Username in JWT not found");
             jwtService.isTokenValid(mqttAuthRequest.getPassword(), user.get());
         } else {
@@ -110,10 +110,15 @@ public class AuthenticationService {
         }
     }
 
+    private String extractFEJWTUsername(String encodedString){
+        String username = encodedString.replace("FE_JWT_", "").substring(0, encodedString.length() - 44);
+        return username;
+    }
+
     public boolean authorizationForMqttTopic(MqttAuthRequest mqttAuthRequest) {
         String username = mqttAuthRequest.getUsername();
         if (username.contains("FE_JWT_")) {
-            username = mqttAuthRequest.getClientid();
+            username = extractFEJWTUsername(mqttAuthRequest.getUsername());
         }
         Optional<LoginDetails> user = loginRepository.findById(username);
         if (user.isEmpty()) return false;

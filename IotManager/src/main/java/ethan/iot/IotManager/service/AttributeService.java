@@ -13,7 +13,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -24,6 +25,22 @@ public class AttributeService {
     private final DeviceRepository deviceRepository;
     private final AttributeRepository attributeRepository;
     private final AttributeHistoryRepository attributeHistoryRepository;
+
+    public Attribute getAttribute(LoginDetails authUser, long id) {
+        Account userAccount = accountRepository.findByLoginDetails(authUser).orElseThrow();
+        List<Attribute> filteredAttribute = userAccount.getDevices().stream()
+                .map(Device::getAttributes)
+                .flatMap(Collection::stream)
+                .filter(a -> a.getId() == id).toList();
+        if (filteredAttribute.isEmpty()) return null;
+        return filteredAttribute.get(0);
+    }
+
+    public List<AttributeHistory> getAttributeHistory(LoginDetails authUser, long id) {
+        Attribute attribute = getAttribute(authUser, id);
+        if (attribute == null) return null;
+        return attribute.getAttributeHistory();
+    }
 
     public Attribute addAttribute(LoginDetails authUser, NewAttributeDto newAttributeDto) {
         Account userAccount = accountRepository.findByLoginDetails(authUser).orElseThrow();
@@ -67,19 +84,18 @@ public class AttributeService {
         attributeRepository.delete(attributeToDelete);
     }
 
-    public void processAttributeUpdate(Map<String, Object> payload, String topic) {
+    public void processAttributeUpdate(String payload, String topic) {
         String[] topicChannels = topic.split("/");
-        if(!topicChannels[1].equalsIgnoreCase("c")) return;
+        if (!topicChannels[1].equalsIgnoreCase("c")) return;
         Optional<Attribute> attributeOptional = attributeRepository.findByConfirmAttributeChannel(topic);
         if (attributeOptional.isEmpty()) return;
         Attribute updatedAttribute = attributeOptional.get();
-        String newAttributeValue = (String) payload.get(updatedAttribute.getName());
         AttributeHistory newAttributeHistory = AttributeHistory.builder()
                 .timeOfUpdate(LocalDateTime.now())
-                .attributeValue(newAttributeValue)
+                .attributeValue(payload)
                 .build();
         updatedAttribute.addAttributeHistory(newAttributeHistory);
-        updatedAttribute.setAttributeValue(newAttributeValue);
+        updatedAttribute.setAttributeValue(payload);
         attributeHistoryRepository.save(newAttributeHistory);
         attributeRepository.save(updatedAttribute);
     }

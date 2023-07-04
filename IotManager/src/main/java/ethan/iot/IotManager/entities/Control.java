@@ -25,7 +25,7 @@ public class Control {
     private String buttonMessage;
     private String toggleButtonMessageOn;
     private String toggleButtonMessageOff;
-    @OneToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.EAGER)
     @ToString.Exclude
     private List<Attribute> attributes;
 

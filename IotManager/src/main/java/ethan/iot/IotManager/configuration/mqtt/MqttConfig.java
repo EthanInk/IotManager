@@ -58,11 +58,8 @@ public class MqttConfig {
         System.out.println("Received message on topic: " + topic);
         String payload = message.getPayload();
         System.out.println("Payload: " + payload);
-
-        JsonParser springParser = JsonParserFactory.getJsonParser();
-        Map<String, Object> payloadMap = springParser.parseMap(payload);
         assert topic != null;
-        attributeService.processAttributeUpdate(payloadMap, topic);
+        attributeService.processAttributeUpdate(payload, topic);
     }
 
     @Bean

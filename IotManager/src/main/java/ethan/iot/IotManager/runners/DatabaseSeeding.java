@@ -39,13 +39,14 @@ public class DatabaseSeeding implements CommandLineRunner {
         Device seededDevice1 = deviceService.addDeviceForUser(user, newDeviceDto1);
         deviceService.addDeviceForUser(user, newDeviceDto2);
         deviceService.addDeviceForUser(user, newDeviceDto3);
-        NewAttributeDto newAttributeDto1 = NewAttributeDto.builder().name("Test attribute 1").deviceId(seededDevice1.getId()).attributeValue("0").updateAttributeChannel("updateChannel1").confirmAttributeChannel("confirmChannel1").build();
-        NewAttributeDto newAttributeDto2 = NewAttributeDto.builder().name("Test attribute 2").deviceId(seededDevice1.getId()).attributeValue("0").updateAttributeChannel("updateChannel2").confirmAttributeChannel("confirmChannel2").build();
+        NewAttributeDto newAttributeDto1 = NewAttributeDto.builder().name("LED").deviceId(seededDevice1.getId()).attributeValue("0").dataType("NUMBER").updateAttributeChannel("ledUpdate1").confirmAttributeChannel("ledConfirm1").build();
+        NewAttributeDto newAttributeDto2 = NewAttributeDto.builder().name("Test attribute 2").deviceId(seededDevice1.getId()).attributeValue("0").dataType("NUMBER").updateAttributeChannel("updateChannel2").confirmAttributeChannel("confirmChannel2").build();
         Attribute seededAttribute1 = attributeService.addAttribute(user, newAttributeDto1);
         Attribute seededAttribute2 = attributeService.addAttribute(user, newAttributeDto2);
-        NewControlDto newControlDto1 = NewControlDto.builder().name("Test control 1").attributeId(seededAttribute1.getId()).deviceId(seededDevice1.getId()).controlType("BUTTON").buttonMessage("Test msg").build();
-        NewControlDto newControlDto2 = NewControlDto.builder().name("Test control 2").attributeId(seededAttribute2.getId()).deviceId(seededDevice1.getId()).controlType("SLIDER").sliderMax(100).sliderMin(0).build();
+        NewControlDto newControlDto1 = NewControlDto.builder().name("LED Off button").attributeId(seededAttribute1.getId()).deviceId(seededDevice1.getId()).controlType("BUTTON").buttonMessage("off").build();
+        NewControlDto newControlDto2 = NewControlDto.builder().name("LED Brightness").attributeId(seededAttribute1.getId()).deviceId(seededDevice1.getId()).controlType("SLIDER").sliderMax(100).sliderMin(0).build();
         controlService.addControl(user, newControlDto1);
+        controlService.addControl(user, newControlDto2);
         System.out.println("Done seeding database");
     }
 }

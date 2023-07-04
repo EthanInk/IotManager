@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+    nivo-api:
+        restart: on-failure
+        build: ./nivo-api
+        ports:
+            - "3030:3030"
+        networks:
+            - nivo
+    mosquitto:
+        image: iegomez/mosquitto-go-auth:latest
+        ports:
+            - 1883:1883
+            - 1888:1888
+            - 8883:8883
+            - 9001:9001
+        volumes:
+            - ./mosquitto/conf.d:/mosquitto/etc/conf.d
+            - ./mosquitto/config:/etc/mosquitto
+        networks:
+            - mosquitto
+networks:
+    mosquitto:
+        name: mosquitto
+        driver: bridge
+    nivo:
+        name: nivo
+        driver: bridge

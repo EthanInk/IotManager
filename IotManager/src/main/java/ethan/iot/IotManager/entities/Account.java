@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.validator.constraints.UniqueElements;
 
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +18,7 @@ public class Account {
     @GeneratedValue
     private long id;
     @NotNull
-    @Column(unique=true)
+    @Column(unique = true)
     private String topicRoot;
     @NotNull
     @OneToOne
@@ -28,12 +27,18 @@ public class Account {
     @JsonIgnore
     @ToString.Exclude
     private List<Device> devices;
+    @OneToMany(fetch = FetchType.EAGER)
+    @JsonIgnore
+    @ToString.Exclude
+    private List<PublicAccessToken> publicAccessTokens;
 
-    public void addDevice(Device newDevice){
+    public void addDevice(Device newDevice) {
         devices.add(newDevice);
     }
 
-    public void deleteDevice(Device deleteDevice) { devices.remove(deleteDevice);}
+    public void deleteDevice(Device deleteDevice) {
+        devices.remove(deleteDevice);
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -46,5 +51,9 @@ public class Account {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public void addPublicAccessToken(PublicAccessToken newToken) {
+        publicAccessTokens.add(newToken);
     }
 }
