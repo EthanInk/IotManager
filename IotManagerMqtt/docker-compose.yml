@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+    mosquitto:
+        image: iegomez/mosquitto-go-auth:latest
+        volumes:
+            - ./conf.d:/mosquitto/etc/conf.d
+            - ./config:/etc/mosquitto
+        ports:
+            - 1883:1883
+            - 1888:1888
