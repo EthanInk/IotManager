@@ -1,44 +1,44 @@
 version: '3.8'
 
 services:
-    # nivo-chart-api:
-    #     restart: on-failure
-    #     build: ./IotManagerCharts
-    #     environment:
-    #         - CHART_URL=nivo-chart-api
-    #         - CHART_PORT=3030
-    # nexjs:
-    #     restart: on-failure
-    #     build: ./IotManagerFe
-    #     ports:
-    #         - 8080:8080
-    #         - 80:80
-    #     environment:
-    #         - PORT=80
-    #         - NEXTAUTH_URL=http://localhost:80
-    #         - NEXTAUTH_URL_INTERNAL=http://nexjs:80
-    #         - BACKEND_URL=http://spring:5000
-    #         - BACKEND_PORT=http://spring:5000
-    #         - CHART_URL=nivo-chart-api
-    #         - CHART_PORT=3030
+    nivo-chart-api:
+        restart: on-failure
+        build: ./IotManagerCharts
+        environment:
+            - CHART_URL=nivo-chart-api
+            - CHART_PORT=3030
+    nexjs:
+        restart: on-failure
+        build: ./IotManagerFe
+        ports:
+            - 8080:8080
+            - 80:80
+        environment:
+            - PORT=80
+            - NEXTAUTH_URL=http://localhost:80
+            - NEXTAUTH_URL_INTERNAL=http://nexjs:80
+            - BACKEND_URL=http://spring:5000
+            - BACKEND_PORT=http://spring:5000
+            - CHART_URL=nivo-chart-api
+            - CHART_PORT=3030
     spring:
         restart: on-failure
         build: ./IotManagerApi
         environment:
             - MQTT_URL=mosquitto
             - MQTT_PORT=1883
-    # mosquitto:
-    #     image: iegomez/mosquitto-go-auth:latest
-    #     volumes:
-    #         - ./IotManagerMqtt/conf.d:/mosquitto/etc/conf.d
-    #         - ./IotManagerMqtt/config:/etc/mosquitto
-    #         - ./IotManagerMqtt/startup.sh:/startup.sh
-    #     ports:
-    #         - 1883:1883
-    #         - 1888:1888
-    #     environment:
-    #         - BACKEND_DOMAIN=spring
-    #         - BACKEND_PORT=5000
-    #         - MQTT_URL=mosquitto
-    #         - MQTT_PORT=1883
-    #     entrypoint: /startup.sh
+    mosquitto:
+        image: iegomez/mosquitto-go-auth:latest
+        volumes:
+            - ./IotManagerMqtt/conf.d:/mosquitto/etc/conf.d
+            - ./IotManagerMqtt/config:/etc/mosquitto
+            - ./IotManagerMqtt/startup.sh:/startup.sh
+        ports:
+            - 1883:1883
+            - 1888:1888
+        environment:
+            - BACKEND_DOMAIN=spring
+            - BACKEND_PORT=5000
+            - MQTT_URL=mosquitto
+            - MQTT_PORT=1883
+        entrypoint: /startup.sh

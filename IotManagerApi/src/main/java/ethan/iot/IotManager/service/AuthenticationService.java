@@ -1,9 +1,9 @@
 package ethan.iot.IotManager.service;
 
 import ethan.iot.IotManager.DtO.request.AuthRequest;
-import ethan.iot.IotManager.DtO.response.AuthenticationResponse;
 import ethan.iot.IotManager.DtO.request.MqttAuthRequest;
 import ethan.iot.IotManager.DtO.request.RegisterRequest;
+import ethan.iot.IotManager.DtO.response.AuthenticationResponse;
 import ethan.iot.IotManager.configuration.security.JWTService;
 import ethan.iot.IotManager.entities.Account;
 import ethan.iot.IotManager.entities.Device;
@@ -15,6 +15,8 @@ import ethan.iot.IotManager.repository.DeviceRepository;
 import ethan.iot.IotManager.repository.LoginRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,6 +37,8 @@ public class AuthenticationService {
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
     private final DeviceRepository deviceRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
+    private final String FE_JWT_SUFFIX = "FE_JWT_";
 
     public AuthenticationResponse registerUser(RegisterRequest registerRequest) throws RegistrationError {
         Optional<LoginDetails> existingUser = loginRepository.findById(registerRequest.getUsername());
@@ -58,6 +62,7 @@ public class AuthenticationService {
         String jwtToken = jwtService.generateToken(userLoginDetails);
         return AuthenticationResponse.builder().Token(jwtToken).username(userLoginDetails.getUsername()).build();
     }
+
     public LoginDetails createLoginDetails(String username, String password) {
         LoginDetails newLoginDetails = LoginDetails.builder()
                 .username(username)
@@ -100,26 +105,23 @@ public class AuthenticationService {
     }
 
     public void authenticateMqttServerRequest(MqttAuthRequest mqttAuthRequest) {
-        if (mqttAuthRequest.getUsername().contains("FE_JWT_")) {
+        if (mqttAuthRequest.getUsername().contains(FE_JWT_SUFFIX)) {
             Optional<LoginDetails> user = loginRepository.findById(extractFeJwtUsername(mqttAuthRequest.getUsername()));
             if (user.isEmpty()) throw new EntityNotFoundException("Username in JWT not found");
             jwtService.isTokenValid(mqttAuthRequest.getPassword(), user.get());
-        }
-        else if(!mqttAuthRequest.getClientid().equals(mqttAuthRequest.getUsername())){
-            throw new EntityNotFoundException("Username and Id don't match");
-        }
-        else {
+        } else {
             authenticateUser(mqttAuthRequest);
         }
     }
 
-    private String extractFeJwtUsername(String encodedString){
-        return encodedString.replace("FE_JWT_", "").substring(0, encodedString.length() - 44);
+    private String extractFeJwtUsername(String encodedString) {
+        return encodedString.replace(FE_JWT_SUFFIX, "").substring(0, encodedString.length() - 44);
     }
 
     public boolean authorizationForMqttTopic(MqttAuthRequest mqttAuthRequest) {
+        logger.info("Checking topic auth for " + mqttAuthRequest.getUsername() + " for topic " + mqttAuthRequest.getTopic());
         String username = mqttAuthRequest.getUsername();
-        if (username.contains("FE_JWT_")) {
+        if (username.contains(FE_JWT_SUFFIX)) {
             username = extractFeJwtUsername(mqttAuthRequest.getUsername());
         }
         Optional<LoginDetails> user = loginRepository.findById(username);
@@ -127,16 +129,18 @@ public class AuthenticationService {
 
         LoginDetails loginDetails = user.get();
 
-        if (loginDetails.getRole().equals(Role.DEVICE)) return isDeviceTopicAllowed(loginDetails, mqttAuthRequest.getTopic());
+        if (loginDetails.getRole().equals(Role.DEVICE))
+            return isDeviceTopicAllowed(loginDetails, mqttAuthRequest.getTopic());
 
-        if (loginDetails.getRole().equals(Role.USER)) return isUserTopicAllowed(loginDetails, mqttAuthRequest.getTopic());
+        if (loginDetails.getRole().equals(Role.USER))
+            return isUserTopicAllowed(loginDetails, mqttAuthRequest.getTopic());
 
         if (loginDetails.getRole().equals(Role.SERVER)) return isServerTopicAllowed();
 
         return false;
     }
 
-    private boolean isDeviceTopicAllowed(LoginDetails loginDetails, String topic){
+    private boolean isDeviceTopicAllowed(LoginDetails loginDetails, String topic) {
         Optional<Device> deviceOptional = deviceRepository.findByLoginDetails(loginDetails);
         if (deviceOptional.isEmpty()) return false;
 
@@ -147,7 +151,7 @@ public class AuthenticationService {
                 .anyMatch(attribute -> attribute.equalsIgnoreCase(topic));
     }
 
-    private boolean isUserTopicAllowed(LoginDetails userLoginDetails, String topic){
+    private boolean isUserTopicAllowed(LoginDetails userLoginDetails, String topic) {
         Optional<Account> userAccount = accountRepository.findByLoginDetails(userLoginDetails);
         if (userAccount.isEmpty()) return false;
         List<Device> devices = userAccount.get().getDevices();
@@ -158,7 +162,7 @@ public class AuthenticationService {
                 .anyMatch(attribute -> attribute.equalsIgnoreCase(topic));
     }
 
-    private boolean isServerTopicAllowed(){
+    private boolean isServerTopicAllowed() {
         return true;
     }
 }

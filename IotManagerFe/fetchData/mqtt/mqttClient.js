@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 const url = "ws://localhost:1888";
 
-
 export function getMqttClient(user) {
   const options = {
     username: `FE_JWT_${user.username}_${uuidv4()}`,

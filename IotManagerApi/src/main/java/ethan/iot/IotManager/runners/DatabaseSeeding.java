@@ -14,6 +14,8 @@ import ethan.iot.IotManager.service.AuthenticationService;
 import ethan.iot.IotManager.service.ControlService;
 import ethan.iot.IotManager.service.DeviceService;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +27,7 @@ public class DatabaseSeeding implements CommandLineRunner {
     private final ControlService controlService;
     private final DeviceService deviceService;
     private final LoginRepository loginRepository;
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationService.class);
 
     @Override
     public void run(String... args) throws Exception { //Remember to remove egear loading
@@ -47,6 +50,6 @@ public class DatabaseSeeding implements CommandLineRunner {
         NewControlDto newControlDto2 = NewControlDto.builder().name("LED Brightness").attributeId(seededAttribute1.getId()).deviceId(seededDevice1.getId()).controlType("SLIDER").sliderMax(100).sliderMin(0).build();
         controlService.addControl(user, newControlDto1);
         controlService.addControl(user, newControlDto2);
-        System.out.println("Done seeding database");
+        logger.info("Done seeding database");
     }
 }
